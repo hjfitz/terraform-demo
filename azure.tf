@@ -1,6 +1,14 @@
+variable az-cl-id {}
+variable az-cl-sec {}
+variable az-tenant-id {}
+variable az-sub-id {}
+
 provider "azurerm" {
-	version 		= "=1.27.0"
-	subscription_id	= "af5c3d81-0e91-44e6-8f47-1dc25fedb3ac"
+	version 		= "=1.34.0"
+	client_id       = "${var.az-cl-id}"
+	client_secret   = "${var.az-cl-sec}"
+	subscription_id = "${var.az-sub-id}"
+	tenant_id       = "${var.az-tenant-id}"
 }
 
 resource "azurerm_resource_group" "myrg" {
@@ -19,7 +27,7 @@ resource "azurerm_app_service_plan" "test-deploy" {
 }
 
 resource "azurerm_app_service" "tf-deployed-aps" {
-	name                = "example-app-service"
+	name                = "ets-super-example-app-service"
 	location            = "${azurerm_resource_group.myrg.location}"
 	resource_group_name = "${azurerm_resource_group.myrg.name}"
 	app_service_plan_id = "${azurerm_app_service_plan.test-deploy.id}"
