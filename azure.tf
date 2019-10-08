@@ -27,7 +27,7 @@ resource "azurerm_app_service_plan" "test-deploy" {
 }
 
 resource "azurerm_app_service" "tf-deployed-aps" {
-	name                = "ets-super-example-app-service"
+	name                = "ets-super-example-app-service-innit"
 	location            = "${azurerm_resource_group.myrg.location}"
 	resource_group_name = "${azurerm_resource_group.myrg.name}"
 	app_service_plan_id = "${azurerm_app_service_plan.test-deploy.id}"
