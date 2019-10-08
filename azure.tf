@@ -1,5 +1,6 @@
 provider "azurerm" {
 	version 		= "=1.27.0"
+	subscription_id	= "af5c3d81-0e91-44e6-8f47-1dc25fedb3ac"
 }
 
 resource "azurerm_resource_group" "myrg" {
