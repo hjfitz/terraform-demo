@@ -1,8 +1,12 @@
 const request = require('request-promise')
-const tar = require('tar')
+const targz = require('targz')
 const fs = require('fs')
 
 const zippedConfig = 'out.tar.gz'
+
+const doGz = (src, dest) => new Promise((res, rej) => {
+	targz.compress({src, dest}, (err) => err ? rej(err) : res())
+})
 
 function getEnv() {
 	const env = process.env.NODE_ENV || 'development'
@@ -22,17 +26,15 @@ async function main() {
 		'Content-Type': 'application/vnd.api+json'
 	}
 
-	const [,,file, orgWS] = process.argv
-	if (!file || !orgWS) {
-		console.error("Usage: $0 <path_to_content_directory> <organization>/<workspace>")
+	const [,, orgWS] = process.argv
+	if (!orgWS) {
+		console.error("Usage: node api-driven.js <organization>/<workspace>")
 		process.exit(1)
 	}
 	const [org, workspace] = orgWS.split('/')
 
-	// 1. compress the template
-	await tar.c({file: zippedConfig}, [file])
-
 	// 2. get the workspace ID
+	console.log('getting workspace: ', {org, workspace})
 	const wsResp = await request.get(`https://app.terraform.io/api/v2/organizations/${org}/workspaces/${workspace}`, {
 		headers,
 	})
@@ -40,6 +42,7 @@ async function main() {
 
 
 	// 3. Create a new config version
+	console.log('creating new config version', {workspaceID})
 	const configResp = await request.post(`https://app.terraform.io/api/v2/workspaces/${workspaceID}/configuration-versions`, {
 		headers,
 		body: JSON.stringify({data: {type: 'configuration-version'}})
@@ -49,14 +52,16 @@ async function main() {
 
 
 	// 4. Upload the config content (causing a new run to occur)
+	console.log('zipping and uploading', {zippedConfig, uploadUrl})
+	await doGz(`${__dirname}/conf/`, zippedConfig)
 	const openFile = fs.readFileSync(zippedConfig)
-	console.log(openFile)
 	const createResp = await request.put(uploadUrl, {
 		headers: {'Content-Type': 'application/octet-stream'},
 		body: openFile
 	})
 
 	console.log(createResp)
+		
 }
 
 main()
